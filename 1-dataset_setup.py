@@ -1,6 +1,6 @@
 from partition_based_opinion_assignment import real_world_data_generation_API, SBM_data_generation_API
 
-def simple_helper(datasets,number):
+def simple_helper(datasets, number):
     for dataset_name in datasets:
         print("\n\n", dataset_name, ":\n")
         for test_id in range(number):
@@ -18,12 +18,15 @@ def simple_helper(datasets,number):
 if __name__ == "__main__":
     seed_id = 42
     pre_path = "EchoChambersDatasets/"
-  
-#    datasets = [f'SBM_{N}' for N in [5,10,50,100]][:]
-#    simple_helper(datasets,10)
-#
-#    datasets = ["facebook","twitter","git","lastfm"]
-#    simple_helper(datasets,10)
-#    
-    datasets = ["pokec", "soc"][:]  
-    simple_helper(datasets,3)
+
+    # 1. Synthetic SBM generation (self-contained, no downloads needed):
+    datasets = [f'SBM_{N}' for N in [5, 10, 50, 100]][:]
+    # simple_helper(datasets, 10)
+
+    # 2. Real-world networks (requires downloading SNAP edge lists first):
+    # datasets = ["facebook", "twitter", "git", "lastfm"]
+    # simple_helper(datasets, 10)
+
+    # 3. Default quick setup: SBM_5 (first seed only)
+    datasets = ["SBM_5"]
+    simple_helper(datasets, 1)
