@@ -1,0 +1,20 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Experiment results and generated files
+EchoChambersResults*/
+EchoChambersDatasetsModulation/
+*.pkl
+
+# Generated dataset files (prevent huge edge lists from accidental commit)
+EchoChambersDatasets/*_edges.txt
+!EchoChambersDatasets/README.md
+!EchoChambersDatasets/RW_Reddit_edges.zip
