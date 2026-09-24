@@ -108,13 +108,12 @@ def prepare_graph_data(
 
         opinions_arr = np.array([opinions_dict[g_id] for g_id in subgraph_nodes], dtype=np.float32)
         adj_out = [[] for _ in range(n)]
-        in_deg = np.zeros(n, dtype=np.float32)
-        out_deg = np.zeros(n, dtype=np.float32)
+        # CRITICAL: Use true out-degree in full graph G so that (p @ d_out - E_in) accurately measures real external cut edges
+        in_deg = np.array([G.indegree(g_id) for g_id in subgraph_nodes], dtype=np.float32)
+        out_deg = np.array([G.outdegree(g_id) for g_id in subgraph_nodes], dtype=np.float32)
 
         for u, v in sub_edges:
             adj_out[u].append(v)
-            out_deg[u] += 1
-            in_deg[v] += 1
     else:
         n = G.vcount()
         node_map = list(range(n))
@@ -225,8 +224,8 @@ def extract_seed_subgraph(
             nbrs = set(G.neighbors(u, mode="OUT")) | set(G.neighbors(u, mode="IN"))
             for v in nbrs:
                 if v not in subgraph_nodes:
-                    # Same opinion polarity check
-                    if opinions_dict[v] * seed_op > 0:
+                    # Same opinion polarity and proximity check (prevents variance explosion in extremes)
+                    if opinions_dict[v] * seed_op > 0 and abs(opinions_dict[v] - seed_op) <= 0.45:
                         next_frontier.add(v)
 
         subgraph_nodes.update(next_frontier)
@@ -235,12 +234,21 @@ def extract_seed_subgraph(
         if len(subgraph_nodes) >= max_nodes:
             break
 
-    # If subgraph is too large, retain nodes with highest absolute opinion
+    # If subgraph has too few nodes, retry with looser distance
+    if len(subgraph_nodes) < 15:
+        for u in list(subgraph_nodes):
+            nbrs = set(G.neighbors(u, mode="OUT")) | set(G.neighbors(u, mode="IN"))
+            for v in nbrs:
+                if opinions_dict[v] * seed_op > 0:
+                    subgraph_nodes.add(v)
+                if len(subgraph_nodes) >= max_nodes:
+                    break
+
+    # Retain nodes closest in opinion to the seed to keep variance minimal
     if len(subgraph_nodes) > max_nodes:
         sorted_nodes = sorted(
             list(subgraph_nodes),
-            key=lambda x: abs(opinions_dict[x]),
-            reverse=True,
+            key=lambda x: abs(opinions_dict[x] - seed_op),
         )
         return sorted_nodes[:max_nodes]
 
